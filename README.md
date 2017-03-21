@@ -29,3 +29,5 @@ configuration like below
     }]
   }]
 ```
+
+Note: This does not install a setsid hook like 1.x.x versions, you should call setsid (for example via setsid command bundled with daemontools)
