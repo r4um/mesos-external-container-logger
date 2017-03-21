@@ -19,7 +19,7 @@ fi
 
 #sudo apt-get update
 #sudo apt-get dist-upgrade
-#sudo apt-get -y install curl libz-dev build-essential python-dev libcurl4-nss-dev libsasl2-dev libsasl2-modules maven libapr1-dev libsvn-dev openjdk-7-jdk cmake git
+#sudo apt-get -y install curl libz-dev build-essential python-dev libcurl4-nss-dev libsasl2-dev libsasl2-modules maven libapr1-dev libsvn-dev openjdk-7-jdk cmake git libboost-all-dev
 
 if [ ! -d ../mesos-install ]; then
   cd build
