@@ -47,9 +47,8 @@ struct Flags : public virtual flags::FlagsBase
   {
     add(&Flags::external_logger_binary,
         "external_logger_binary",
-        "external_logger_script",
         "Path to the external command which will read STDIN for logs",
-        static_cast<const std::string*>(nullptr),
+        NULL,
         [](const std::string& executablePath) -> Option<Error> {
           if (!os::exists(executablePath)) {
               return Error("Cannot find: " + executablePath);
@@ -115,6 +114,9 @@ public:
       const ExecutorInfo& executorInfo,
       const std::string& sandboxDirectory);
 
+  virtual process::Future<Nothing> recover(
+      const ExecutorInfo& executorInfo,
+      const std::string& sandboxDirectory);
 protected:
   Flags flags;
   process::Owned<ExternalContainerLoggerProcess> process;

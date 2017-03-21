@@ -64,6 +64,13 @@ class ExternalContainerLoggerProcess :
 public:
   ExternalContainerLoggerProcess(const Flags& _flags) : flags(_flags) {}
 
+  Future<Nothing> recover(
+      const ExecutorInfo& executorInfo,
+      const std::string& sandboxDirectory)
+  {
+    // No state to recover.
+    return Nothing();
+  }
   // Spawns two subprocesses that should read from stdin to receive the stdout
   // and stderr log streams from the task.
   Future<SubprocessInfo> prepare(
@@ -117,18 +124,13 @@ public:
     // If we are on systemd, then extend the life of the process as we
     // do with the executor. Any grandchildren's lives will also be
     // extended.
-    std::vector<Subprocess::ParentHook> parentHooks;
+    std::vector<Subprocess::Hook> parentHooks;
 #ifdef __linux__
     if (systemd::enabled()) {
-      parentHooks.emplace_back(Subprocess::ParentHook(
+      parentHooks.emplace_back(Subprocess::Hook(
           &systemd::mesos::extendLifetime));
     }
 #endif // __linux__
-
-    // Each logger needs to SETSID so it can continue logging if the agent
-    // dies.
-    std::vector<Subprocess::ChildHook> childHooks;
-    childHooks.emplace_back(Subprocess::ChildHook::SETSID());
 
     // Set the stream name for the stdout stream
     environment[flags.mesos_field_prefix + flags.stream_name_field] = "STDOUT";
@@ -139,11 +141,11 @@ public:
         Subprocess::FD(outfds.read, Subprocess::IO::OWNED),
         Subprocess::PATH("/dev/null"),
         Subprocess::FD(STDERR_FILENO),
-        nullptr,
+        None(),
         environment,
         None(),
-        parentHooks,
-        childHooks);
+        None(),
+        parentHooks);
 
     if (outProcess.isError()) {
       os::close(outfds.write.get());
@@ -183,11 +185,11 @@ public:
         Subprocess::FD(errfds.read, Subprocess::IO::OWNED),
         Subprocess::PATH("/dev/null"),
         Subprocess::FD(STDERR_FILENO),
-        nullptr,
+        None(),
         environment,
         None(),
-        parentHooks,
-        childHooks);
+        None(),
+        parentHooks);
 
     if (errProcess.isError()) {
       os::close(outfds.write.get());
@@ -251,7 +253,7 @@ org_apache_mesos_ExternalContainerLogger(
     "Apache Mesos",
     "modules@mesos.apache.org",
     "External Process Logger module.",
-    nullptr,
+    NULL,
     [](const Parameters& parameters) -> ContainerLogger* {
       // Convert `parameters` into a map.
       std::map<std::string, std::string> values;
@@ -261,16 +263,11 @@ org_apache_mesos_ExternalContainerLogger(
 
       // Load and validate flags from the map.
       mesos::internal::logger::Flags flags;
-      Try<flags::Warnings> load = flags.load(values);
+      Try<Nothing> load = flags.load(values);
 
       if (load.isError()) {
         LOG(ERROR) << "Failed to parse parameters: " << load.error();
-        return nullptr;
-      }
-
-      // Log any flag warnings.
-      foreach (const flags::Warning& warning, load->warnings) {
-        LOG(WARNING) << warning.message;
+        return NULL;
       }
 
       return new mesos::internal::logger::ExternalContainerLogger(flags);
