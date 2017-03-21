@@ -59,7 +59,7 @@ add_definitions(
     -DTESTLIBEXECDIR="nowhere"
     -DSBINDIR="nowhere"
     -DPKGDATADIR="nowhere"
-    -DVERSION="1.1.0"
+    -DVERSION="0.28.2"
 )
 
 set(EXTERNAL_CONTAINER_LOGGER_SOURCES

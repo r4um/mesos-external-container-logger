@@ -45,6 +45,7 @@
 #include <linux/systemd.hpp>
 #endif // __linux__
 
+#include "slave/container_loggers/logrotate.hpp"
 #include "lib_externallogger.hpp"
 
 using namespace mesos;
@@ -71,6 +72,7 @@ public:
     // No state to recover.
     return Nothing();
   }
+
   // Spawns two subprocesses that should read from stdin to receive the stdout
   // and stderr log streams from the task.
   Future<SubprocessInfo> prepare(
@@ -228,6 +230,17 @@ ExternalContainerLogger::~ExternalContainerLogger()
 Try<Nothing> ExternalContainerLogger::initialize()
 {
   return Nothing();
+}
+
+Future<Nothing> ExternalContainerLogger::recover(
+    const ExecutorInfo& executorInfo,
+    const std::string& sandboxDirectory)
+{
+  return dispatch(
+      process.get(),
+      &ExternalContainerLoggerProcess::recover,
+      executorInfo,
+      sandboxDirectory);
 }
 
 Future<ContainerLogger::SubprocessInfo>
